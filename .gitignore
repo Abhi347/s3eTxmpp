@@ -2,7 +2,5 @@ build_s3egloox_vc12/
 src/tests/
 project_s3eGloox/
 project_gloox/
-lib/
-src/examples/
 build_s3etxmpp_vc12/
 project_s3eTxmpp/
