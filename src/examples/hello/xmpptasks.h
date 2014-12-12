@@ -28,8 +28,8 @@
 #ifndef _HELLO_XMPPTASKS_H_
 #define _HELLO_XMPPTASKS_H_
 
-#include "../../taskparent.h"
-#include "../../xmpptask.h"
+#include "taskparent.h"
+#include "xmpptask.h"
 
 namespace txmpp {
 

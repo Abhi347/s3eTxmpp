@@ -37,6 +37,12 @@
 #error "Must define either WIN32 or POSIX."
 #endif
 
+struct timespec
+{
+	time_t tv_sec;          /* Seconds.  */
+	long int tv_nsec;       /* Nanoseconds.  */
+};
+
 namespace txmpp {
 
 #if defined(WIN32)
@@ -160,7 +166,7 @@ bool Event::Wait(int cms) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
 
-    struct timespec ts;
+	struct timespec ts;
     ts.tv_sec = tv.tv_sec + (cms / 1000);
     ts.tv_nsec = tv.tv_usec * 1000 + (cms % 1000) * 1000000;
 

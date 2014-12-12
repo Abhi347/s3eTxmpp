@@ -29,8 +29,8 @@
 
 #include <iostream>
 
-#include "../../logging.h"
-#include "../../prexmppauthimpl.h"
+#include "logging.h"
+#include "prexmppauthimpl.h"
 #include "xmpptasks.h"
 
 namespace txpp {

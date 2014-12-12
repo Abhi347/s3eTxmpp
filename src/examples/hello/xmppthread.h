@@ -28,8 +28,8 @@
 #ifndef _HELLO_XMPPTHREAD_H_
 #define _HELLO_XMPPTHREAD_H_
 
-#include "../../thread.h"
-#include "../../xmppclientsettings.h"
+#include "thread.h"
+#include "xmppclientsettings.h"
 #include "xmpppump.h"
 
 namespace txmpp {

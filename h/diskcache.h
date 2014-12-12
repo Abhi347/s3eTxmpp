@@ -34,6 +34,8 @@
 
 #include <map>
 #include <string>
+#include <time.h>
+#include <sys/time.h>
 
 #ifdef WIN32
 #undef UnlockResource

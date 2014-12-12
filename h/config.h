@@ -1,6 +1,7 @@
 #ifndef _TXMPP_CONFIG_H_
 #define _TXMPP_CONFIG_H_
 
+#define LINUX
 #define FEATURE_ENABLE_SSL
 #define HAVE_OPENSSL_SSL_H
 #define POSIX

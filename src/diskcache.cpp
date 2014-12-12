@@ -28,6 +28,8 @@
 #include "diskcache.h"
 
 #include <time.h>
+#include <sys/time.h>
+#include "s3eTimer.h"
 
 #ifdef WIN32
 #include "win32.h"
@@ -163,7 +165,7 @@ bool DiskCache::UnlockResource(const std::string& id) {
     entry->lock_state = LS_UNLOCKING;
   } else {
     entry->lock_state = LS_UNLOCKED;
-    entry->last_modified = time(0);
+	entry->last_modified = s3eTimerGetUTC();// time(0);
     CheckLimit();
   }
   return true;
@@ -324,7 +326,7 @@ DiskCache::Entry* DiskCache::GetOrCreateEntry(const std::string& id,
   e.accessors = 0;
   e.size = 0;
   e.streams = 0;
-  e.last_modified = time(0);
+  e.last_modified = s3eTimerGetUTC();
   it = map_.insert(EntryMap::value_type(id, e)).first;
   return &it->second;
 }
@@ -353,7 +355,7 @@ void DiskCache::ReleaseResource(const std::string& id, size_t index) const {
     this2->total_size_ += new_size;
 
     if ((LS_UNLOCKING == entry->lock_state) && (0 == entry->accessors)) {
-      entry2->last_modified = time(0);
+		entry2->last_modified = s3eTimerGetUTC();
       entry2->lock_state = LS_UNLOCKED;
       this2->CheckLimit();
     }

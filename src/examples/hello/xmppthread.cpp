@@ -25,50 +25,66 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <iostream>
-#include "../../cryptstring.h"
-#include "../../logging.h"
-#include "../../xmppclientsettings.h"
 #include "xmppthread.h"
 
-int main(int argc, char* argv[]) {
+#include <assert.h>
+#include "prexmppauthimpl.h"
+#include "xmppasyncsocketimpl.h"
+#include "xmppclientsettings.h"
 
-  bool reconnect = true;
+namespace txmpp {
+namespace {
 
-  txmpp::LogMessage::LogToDebug(txmpp::LS_SENSITIVE);
+const uint32 MSG_LOGIN = 1;
+const uint32 MSG_DISCONNECT = 2;
 
-  txmpp::InsecureCryptStringImpl password;
-  password.password() = "test";
+struct LoginData : public MessageData {
+  LoginData(const XmppClientSettings& s) : xcs(s) {}
+  virtual ~LoginData() {}
+  XmppClientSettings xcs;
+};
 
-  while (reconnect) {
+} // namespace
 
-    // Start xmpp on a different thread
-    hello::XmppThread thread;
-    thread.Start();
-
-    // Create client settings
-    txmpp::XmppClientSettings xcs;
-    xcs.set_user("test");
-    xcs.set_pass(txmpp::CryptString(password));
-    xcs.set_host("example.org");
-    xcs.set_resource("resource");
-    xcs.set_use_tls(true);
-    xcs.set_server(txmpp::SocketAddress("example.org", 5222));
-
-    thread.Login(xcs);
-
-    // Use main thread for console input
-    std::string line;
-    while (std::getline(std::cin, line)) {
-      if (line == "quit")
-        reconnect = false;
-      if (line == "continue" || line == "quit")
-        break;
-    }
-
-    thread.Disconnect();
-    thread.Stop();
-  }
-
-  return 0;
+XmppThread::XmppThread() {
+  pump_ = new XmppPump(this);
 }
+
+XmppThread::~XmppThread() {
+  delete pump_;
+}
+
+void XmppThread::ProcessMessages(int cms) {
+  Thread::ProcessMessages(cms);
+}
+
+void XmppThread::Login(const XmppClientSettings& xcs) {
+  Post(this, MSG_LOGIN, new LoginData(xcs));
+}
+
+void XmppThread::Disconnect() {
+  Post(this, MSG_DISCONNECT);
+}
+
+void XmppThread::OnStateChange(XmppEngine::State state) {
+}
+
+void XmppThread::OnMessage(Message* pmsg) {
+  switch (pmsg->message_id) {
+    case MSG_LOGIN: {
+      assert(pmsg->pdata);
+      LoginData* data = reinterpret_cast<LoginData*>(pmsg->pdata);
+      pump_->DoLogin(data->xcs, new XmppAsyncSocketImpl(true),
+                     new PreXmppAuthImpl());
+      delete data;
+      }
+      break;
+    case MSG_DISCONNECT:
+      pump_->DoDisconnect();
+      break;
+    default:
+      assert(false);
+  }
+}
+
+}  // namespace hello
