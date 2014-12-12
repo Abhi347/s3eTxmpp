@@ -31,17 +31,10 @@
 #include <windows.h>
 #elif defined(POSIX)
 #include <pthread.h>
-#include <sys/time.h>
 #include <time.h>
 #else
 #error "Must define either WIN32 or POSIX."
 #endif
-
-struct timespec
-{
-	time_t tv_sec;          /* Seconds.  */
-	long int tv_nsec;       /* Nanoseconds.  */
-};
 
 namespace txmpp {
 

@@ -40,6 +40,7 @@
 #include "stringencode.h"
 #include "stringutils.h"
 #include "thread.h"
+#include <fcntl.h>
 
 #ifdef WIN32
 #include "win32.h"

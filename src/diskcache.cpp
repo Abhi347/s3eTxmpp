@@ -28,19 +28,15 @@
 #include "diskcache.h"
 
 #include <time.h>
-#include <sys/time.h>
 #include "s3eTimer.h"
 
-#ifdef WIN32
-#include "win32.h"
-#endif
-
 #include "common.h"
-#include "fileutils.h"
+//#include "fileutils.h"
 #include "pathutils.h"
 #include "stream.h"
 #include "stringencode.h"
 #include "stringutils.h"
+#include "s3eFile.h"
 
 #ifdef _DEBUG
 #define TRANSPARENT_CACHE_NAMES 1
@@ -85,7 +81,7 @@ DiskCache::~DiskCache() {
 }
 
 bool DiskCache::Initialize(const std::string& folder, size_t size) {
-  if (!folder_.empty() || !Filesystem::CreateFolder(folder))
+	if (!folder_.empty() || !s3eFileMakeDirectory(folder.c_str()))
     return false;
 
   folder_ = folder;

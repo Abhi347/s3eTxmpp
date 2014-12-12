@@ -59,7 +59,7 @@
 #include "logging.h"
 #include "nethelpers.h"
 #include "time.h"
-#include "winping.h"
+//#include "winping.h"
 #include "win32socketinit.h"
 
 // stm: this will tell us if we are on OSX
@@ -539,7 +539,8 @@ class EventDispatcher : public Dispatcher {
     CritScope cs(&crit_);
     if (!fSignaled_) {
       const uint8 b[1] = { 0 };
-      if (VERIFY(1 == write(afd_[1], b, sizeof(b)))) {
+	  if (1 == write(afd_[1], b, sizeof(b)))
+	  {
         fSignaled_ = true;
       }
     }

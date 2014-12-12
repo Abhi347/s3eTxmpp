@@ -36,11 +36,11 @@
 #endif  // !WIN32
 #endif
 
-#if SSL_USE_SCHANNEL
+#if defined(SSL_USE_SCHANNEL)
 
-#include "schanneladapter.h"
+//#include "schanneladapter.h"
 
-#elif SSL_USE_OPENSSL  // && !SSL_USE_SCHANNEL
+#elif defined(SSL_USE_OPENSSL)  // && !SSL_USE_SCHANNEL
 
 #include "openssladapter.h"
 
@@ -52,9 +52,9 @@ namespace txmpp {
 
 SSLAdapter*
 SSLAdapter::Create(AsyncSocket* socket) {
-#if SSL_USE_SCHANNEL
+#if defined(SSL_USE_SCHANNEL)
   return new SChannelAdapter(socket);
-#elif SSL_USE_OPENSSL  // && !SSL_USE_SCHANNEL
+#elif defined(SSL_USE_OPENSSL)  // && !SSL_USE_SCHANNEL_
   return new OpenSSLAdapter(socket);
 #else  // !SSL_USE_OPENSSL && !SSL_USE_SCHANNEL
   return NULL;
@@ -63,7 +63,7 @@ SSLAdapter::Create(AsyncSocket* socket) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#if SSL_USE_OPENSSL
+#if defined(SSL_USE_OPENSSL)
 
 bool InitializeSSL(VerificationCallback callback) {
   return OpenSSLAdapter::InitializeSSL(callback);

@@ -69,7 +69,7 @@ class Dispatcher {
   virtual WSAEVENT GetWSAEvent() = 0;
   virtual SOCKET GetSocket() = 0;
   virtual bool CheckSignalClose() = 0;
-#elif POSIX
+#elif defined(POSIX)
   virtual int GetDescriptor() = 0;
   virtual bool IsDescriptorClosed() = 0;
 #endif

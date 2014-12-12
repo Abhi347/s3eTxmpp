@@ -27,15 +27,7 @@
 
 #include "pathutils.h"
 
-#ifdef WIN32
-#include "win32.h"
-#include <shellapi.h>
-#include <shlobj.h>
-#include <tchar.h>
-#endif  // WIN32
-
 #include "common.h"
-#include "fileutils.h"
 #include "logging.h"
 #include "stringutils.h"
 #include "urlencode.h"
@@ -241,28 +233,6 @@ bool Pathname::SetFilename(const std::string& filename) {
     return SetExtension(filename.substr(pos)) && SetBasename(filename.substr(0, pos));
   }
 }
-
-#ifdef WIN32
-bool Pathname::GetDrive(char *drive, uint32 bytes) const {
-  return GetDrive(drive, bytes, folder_);
-}
-
-// static 
-bool Pathname::GetDrive(char *drive, uint32 bytes,
-                        const std::string& pathname) {
-  // need at lease 4 bytes to save c:
-  if (bytes < 4 || pathname.size() < 3) {
-    return false;
-  }
-  
-  memcpy(drive, pathname.c_str(), 3);
-  drive[3] = 0; 
-  // sanity checking
-  return (isalpha(drive[0]) &&
-          drive[1] == ':' &&
-          drive[2] == '\\');
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 

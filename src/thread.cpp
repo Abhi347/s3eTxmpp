@@ -278,9 +278,9 @@ bool Thread::Start(Runnable* runnable) {
       LOG(LS_WARNING) << "PRIORITY_IDLE not supported";
     } else {
       // Set real-time round-robin policy.
-      if (pthread_attr_setschedpolicy(&attr, SCHED_RR) != 0) {
+      //if (pthread_attr_setschedpolicy(&attr, SCHED_RR) != 0) {
         LOG(LS_ERROR) << "pthread_attr_setschedpolicy";
-      }
+      //}
       struct sched_param param;
       if (pthread_attr_getschedparam(&attr, &param) != 0) {
         LOG(LS_ERROR) << "pthread_attr_getschedparam";

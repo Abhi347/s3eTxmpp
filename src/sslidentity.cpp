@@ -40,11 +40,11 @@
 #endif  // !WIN32
 #endif
 
-#if SSL_USE_SCHANNEL
+#if defined(SSL_USE_SCHANNEL)
 
 #error "Not implemented yet"
 
-#elif SSL_USE_OPENSSL  // && !SSL_USE_SCHANNEL
+#elif defined(SSL_USE_OPENSSL)  // && !SSL_USE_SCHANNEL
 
 #include "opensslidentity.h"
 

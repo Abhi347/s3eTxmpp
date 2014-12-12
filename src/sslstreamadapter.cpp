@@ -36,11 +36,11 @@
 #endif  // !WIN32
 #endif
 
-#if SSL_USE_SCHANNEL
+#if defined(SSL_USE_SCHANNEL)
 
 #error "Not implemented yet"
 
-#elif SSL_USE_OPENSSL  // && !SSL_USE_SCHANNEL
+#elif defined(SSL_USE_OPENSSL)  // && !SSL_USE_SCHANNEL
 
 #include "opensslstreamadapter.h"
 
@@ -51,10 +51,10 @@
 namespace txmpp {
 
 SSLStreamAdapter* SSLStreamAdapter::Create(StreamInterface* stream) {
-#if SSL_USE_SCHANNEL
+#if defined(SSL_USE_SCHANNEL)
   // not implemented yet
   // return new SChannelStreamAdapter(stream);
-#elif SSL_USE_OPENSSL  // && !SSL_USE_SCHANNEL
+#elif defined(SSL_USE_OPENSSL)  // && !SSL_USE_SCHANNEL
   return new OpenSSLStreamAdapter(stream);
 #else  // !SSL_USE_OPENSSL && !SSL_USE_SCHANNEL
   return NULL;

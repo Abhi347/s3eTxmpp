@@ -19,6 +19,7 @@ includepath
 
 subprojects{
 	openssl
+	expat
 }
 
  
@@ -29,19 +30,9 @@ files
 	["Header"]
 	"*.h"
 
+
 	(src)
 	[Source]
 	"*.cpp"
-
-	
-
-	(src/examples/hello)
-	["Source","Example"]
-	
-	xmpppump.cpp
-	xmpppump.h
-	xmpptasks.cpp
-	xmpptasks.h
-	xmppthread.cpp
-	xmppthread.h
+	"*.c"
 }

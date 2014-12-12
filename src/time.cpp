@@ -28,7 +28,7 @@
 #include "time.h"
 
 #ifdef POSIX
-#include <sys/time.h>
+#include "master.h"
 #endif
 
 #ifdef WIN32

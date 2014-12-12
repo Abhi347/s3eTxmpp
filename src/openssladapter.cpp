@@ -1,6 +1,6 @@
 #include "openssladapter.h"
 
-#if HAVE_OPENSSL_SSL_H
+#if defined(HAVE_OPENSSL_SSL_H)
 
 #include <openssl/bio.h>
 #include <openssl/crypto.h>

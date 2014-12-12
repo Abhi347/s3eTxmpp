@@ -39,6 +39,19 @@
 struct XML_ParserStruct;
 typedef struct XML_ParserStruct* XML_Parser;
 
+#ifdef XML_LARGE_SIZE  /* Use large integers for file/stream positions. */
+#if defined(XML_USE_MSC_EXTENSIONS) && _MSC_VER < 1400
+typedef __int64 XML_Index;
+typedef unsigned __int64 XML_Size;
+#else
+typedef long long XML_Index;
+typedef unsigned long long XML_Size;
+#endif
+#else
+typedef long XML_Index;
+typedef unsigned long XML_Size;
+#endif /* XML_LARGE_SIZE */
+
 namespace txmpp {
 
 class XmlParseHandler;

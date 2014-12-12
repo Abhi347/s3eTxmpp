@@ -27,7 +27,7 @@
 
 #include "win32socketinit.h"
 
-#include "win32.h"
+//#include "win32.h"
 
 namespace txmpp {
 

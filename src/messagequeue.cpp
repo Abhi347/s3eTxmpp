@@ -32,7 +32,6 @@
 #endif
 
 #ifdef POSIX
-#include <sys/time.h>
 #endif
 
 #include "common.h"

@@ -35,7 +35,7 @@
 #include "common.h"
 #include "diskcache.h"
 #include "logging.h"
-#include "pathutils.h"
+//#include "pathutils.h"
 #include "socketstream.h"
 #include "stringencode.h"
 #include "stringutils.h"
