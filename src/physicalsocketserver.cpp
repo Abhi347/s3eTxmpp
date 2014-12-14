@@ -61,7 +61,7 @@
 #include "time.h"
 //#include "winping.h"
 #include "win32socketinit.h"
-
+#include "libManager.h"
 // stm: this will tell us if we are on OSX
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -1241,8 +1241,9 @@ bool PhysicalSocketServer::Wait(int cmsWait, bool process_io) {
     tvWait.tv_usec = (cmsWait % 1000) * 1000;
     ptvWait = &tvWait;
 
+	
     // Calculate when to return in a timeval
-    gettimeofday(&tvStop, NULL);
+	LIB_MAN->gettimeofday(&tvStop, NULL);
     tvStop.tv_sec += tvWait.tv_sec;
     tvStop.tv_usec += tvWait.tv_usec;
     if (tvStop.tv_usec >= 1000000) {
@@ -1363,7 +1364,7 @@ bool PhysicalSocketServer::Wait(int cmsWait, bool process_io) {
       ptvWait->tv_sec = 0;
       ptvWait->tv_usec = 0;
       struct timeval tvT;
-      gettimeofday(&tvT, NULL);
+	  LIB_MAN->gettimeofday(&tvT, NULL);
       if ((tvStop.tv_sec > tvT.tv_sec)
           || ((tvStop.tv_sec == tvT.tv_sec)
               && (tvStop.tv_usec > tvT.tv_usec))) {

@@ -26,71 +26,11 @@
  */
 
 #include "event.h"
-
-#if defined(WIN32)
-#include <windows.h>
-#elif defined(POSIX)
 #include <pthread.h>
 #include <time.h>
-#else
-#error "Must define either WIN32 or POSIX."
-#endif
+#include "libManager.h"
 
 namespace txmpp {
-
-#if defined(WIN32)
-
-Event::Event(bool manual_reset, bool initially_signaled)
-    : is_manual_reset_(manual_reset),
-      is_initially_signaled_(initially_signaled),
-      event_handle_(NULL) {
-}
-
-bool Event::EnsureInitialized() {
-  if (event_handle_ == NULL) {
-    event_handle_ = ::CreateEvent(NULL,                 // Security attributes.
-                                  is_manual_reset_,
-                                  is_initially_signaled_,
-                                  NULL);                // Name.
-  }
-
-  return (event_handle_ != NULL);
-}
-
-Event::~Event() {
-  if (event_handle_ != NULL) {
-    CloseHandle(event_handle_);
-    event_handle_ = NULL;
-  }
-}
-
-bool Event::Set() {
-  if (!EnsureInitialized())
-    return false;
-
-  SetEvent(event_handle_);
-  return true;
-}
-
-bool Event::Reset() {
-  if (!EnsureInitialized())
-    return false;
-
-  ResetEvent(event_handle_);
-  return true;
-}
-
-bool Event::Wait(int cms) {
-  DWORD ms = (cms == kForever)? INFINITE : cms;
-
-  if (!EnsureInitialized())
-    return false;
-  else
-    return (WaitForSingleObject(event_handle_, ms) == WAIT_OBJECT_0);
-}
-
-#elif defined(POSIX)
-
 Event::Event(bool manual_reset, bool initially_signaled)
     : is_manual_reset_(manual_reset),
       event_status_(initially_signaled),
@@ -157,7 +97,7 @@ bool Event::Wait(int cms) {
     // milliseconds (1e-3) to seconds and nanoseconds (1e-9).
 
     struct timeval tv;
-    gettimeofday(&tv, NULL);
+	LIB_MAN->gettimeofday(&tv, NULL);
 
 	struct timespec ts;
     ts.tv_sec = tv.tv_sec + (cms / 1000);
@@ -186,7 +126,5 @@ bool Event::Wait(int cms) {
 
   return (error == 0);
 }
-
-#endif  // defined WIN32/POSIX
 
 }  // namespace txmpp

@@ -29,8 +29,7 @@ files
 	(h)
 	["Header"]
 	"*.h"
-
-
+	
 	(src)
 	[Source]
 	"*.cpp"

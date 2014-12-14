@@ -187,22 +187,8 @@ Thread::~Thread() {
 }
 
 bool Thread::SleepMs(int milliseconds) {
-#ifdef WIN32
-  ::Sleep(milliseconds);
-  return true;
-#else
-  // POSIX has both a usleep() and a nanosleep(), but the former is deprecated,
-  // so we use nanosleep() even though it has greater precision than necessary.
-  struct timespec ts;
-  ts.tv_sec = milliseconds / 1000;
-  ts.tv_nsec = (milliseconds % 1000) * 1000000;
-  int ret = nanosleep(&ts, NULL);
-  if (ret != 0) {
-    LOG_ERR(LS_WARNING) << "nanosleep() returning early";
-    return false;
-  }
-  return true;
-#endif
+	//Not implemented
+	return false;
 }
 
 bool Thread::SetName(const std::string& name, const void* obj) {

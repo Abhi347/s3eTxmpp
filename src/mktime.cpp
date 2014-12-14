@@ -218,7 +218,7 @@ static time_t time2(struct tm *	tmp, int * 		okayp)
 	*/
 	t = (t < 0) ? 0 : ((time_t)1 << bits);
 	for (;;) {
-		mytm = *localtime(&t);
+		//mytm = *localtime(&t);
 		dir = tmcomp(&mytm, &yourtm);
 		if (dir != 0) {
 			if (bits-- < 0)
@@ -236,12 +236,12 @@ static time_t time2(struct tm *	tmp, int * 		okayp)
 		return WRONG;
 	}
 	t += saved_seconds;
-	*tmp = *localtime(&t);
+	//*tmp = *localtime(&t);
 	*okayp = TRUE;
 	return t;
 }
 
-static time_t time1(struct tm * tmp)
+static time_t time1(struct tm* tmp)
 {
 	register time_t			t;
 	int				okay;

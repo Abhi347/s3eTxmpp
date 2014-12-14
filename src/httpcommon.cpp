@@ -47,6 +47,7 @@
 #include "stringdigest.h"
 #include "stringencode.h"
 #include "stringutils.h"
+#include "libManager.h"
 
 namespace txmpp {
 
@@ -347,7 +348,7 @@ namespace txmpp {
 	}
 
 	bool HttpDateToSeconds(const std::string& date, unsigned long* seconds) {
-		const char* const kTimeZones[] = {
+		/*const char* const kTimeZones[] = {
 			"UT", "GMT", "EST", "EDT", "CST", "CDT", "MST", "MDT", "PST", "PDT",
 			"A", "B", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M",
 			"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y"
@@ -401,13 +402,7 @@ namespace txmpp {
 			}
 			gmt = non_gmt + kTimeZoneOffsets[zindex] * 60 * 60;
 		}
-		// TODO: Android should support timezone, see b/2441195
-#if defined(OSX) || defined(ANDROID)
-		tm *tm_for_timezone = localtime((time_t *)&gmt);
-		*seconds = gmt + tm_for_timezone->tm_gmtoff;
-#else
-		*seconds = gmt - timezone;
-#endif
+		*seconds = gmt - timezone;*/
 		return true;
 	}
 
@@ -736,25 +731,6 @@ namespace txmpp {
 		return result;
 	}
 
-#ifdef WIN32
-	struct NegotiateAuthContext : public HttpAuthContext {
-		CredHandle cred;
-		CtxtHandle ctx;
-		size_t steps;
-		bool specified_credentials;
-
-		NegotiateAuthContext(const std::string& auth, CredHandle c1, CtxtHandle c2)
-			: HttpAuthContext(auth), cred(c1), ctx(c2), steps(0),
-			specified_credentials(false)
-		{ }
-
-		virtual ~NegotiateAuthContext() {
-			DeleteSecurityContext(&ctx);
-			FreeCredentialsHandle(&cred);
-		}
-	};
-#endif // WIN32
-
 	HttpAuthResult HttpAuthenticate(
 		const char * challenge, size_t len,
 		const SocketAddress& server,
@@ -816,7 +792,7 @@ namespace txmpp {
 			cnonce = DIGEST_CNONCE;
 #else
 			char buffer[256];
-			sprintf(buffer, "%d", static_cast<int>(time(0)));
+			sprintf(buffer, "%d", static_cast<int>(LIB_MAN->time()));
 			cnonce = MD5(buffer);
 #endif
 			ncount = "00000001";
@@ -874,191 +850,6 @@ namespace txmpp {
 			response = ss.str();
 			return HAR_RESPONSE;
 		}
-
-#ifdef WIN32
-#if 1
-		bool want_negotiate = (_stricmp(auth_method.c_str(), "negotiate") == 0);
-		bool want_ntlm = (_stricmp(auth_method.c_str(), "ntlm") == 0);
-		// SPNEGO & NTLM
-		if (want_negotiate || want_ntlm) {
-			const size_t MAX_MESSAGE = 12000, MAX_SPN = 256;
-			char out_buf[MAX_MESSAGE], spn[MAX_SPN];
-
-#if 0 // Requires funky windows versions
-			DWORD len = MAX_SPN;
-			if (DsMakeSpn("HTTP", server.IPAsString().c_str(), NULL, server.port(),
-				0, &len, spn) != ERROR_SUCCESS) {
-				LOG_F(WARNING) << "(Negotiate) - DsMakeSpn failed";
-				return HAR_IGNORE;
-			}
-#else
-			sprintfn(spn, MAX_SPN, "HTTP/%s", server.ToString().c_str());
-#endif
-
-			SecBuffer out_sec;
-			out_sec.pvBuffer   = out_buf;
-			out_sec.cbBuffer   = sizeof(out_buf);
-			out_sec.BufferType = SECBUFFER_TOKEN;
-
-			SecBufferDesc out_buf_desc;
-			out_buf_desc.ulVersion = 0;
-			out_buf_desc.cBuffers  = 1;
-			out_buf_desc.pBuffers  = &out_sec;
-
-			const ULONG NEG_FLAGS_DEFAULT =
-				//ISC_REQ_ALLOCATE_MEMORY
-				ISC_REQ_CONFIDENTIALITY
-				//| ISC_REQ_EXTENDED_ERROR
-				//| ISC_REQ_INTEGRITY
-				| ISC_REQ_REPLAY_DETECT
-				| ISC_REQ_SEQUENCE_DETECT
-				//| ISC_REQ_STREAM
-				//| ISC_REQ_USE_SUPPLIED_CREDS
-				;
-
-			::TimeStamp lifetime;
-			SECURITY_STATUS ret = S_OK;
-			ULONG ret_flags = 0, flags = NEG_FLAGS_DEFAULT;
-
-			bool specify_credentials = !username.empty();
-			size_t steps = 0;
-
-			//uint32 now = Time();
-
-			NegotiateAuthContext * neg = static_cast<NegotiateAuthContext *>(context);
-			if (neg) {
-				const size_t max_steps = 10;
-				if (++neg->steps >= max_steps) {
-					LOG(WARNING) << "AsyncHttpsProxySocket::Authenticate(Negotiate) too many retries";
-					return HAR_ERROR;
-				}
-				steps = neg->steps;
-
-				std::string challenge, decoded_challenge;
-				if (HttpHasNthAttribute(args, 1, &challenge, NULL)
-					&& Base64::Decode(challenge, Base64::DO_STRICT,
-					&decoded_challenge, NULL)) {
-					SecBuffer in_sec;
-					in_sec.pvBuffer   = const_cast<char *>(decoded_challenge.data());
-					in_sec.cbBuffer   = static_cast<unsigned long>(decoded_challenge.size());
-					in_sec.BufferType = SECBUFFER_TOKEN;
-
-					SecBufferDesc in_buf_desc;
-					in_buf_desc.ulVersion = 0;
-					in_buf_desc.cBuffers  = 1;
-					in_buf_desc.pBuffers  = &in_sec;
-
-					ret = InitializeSecurityContextA(&neg->cred, &neg->ctx, spn, flags, 0, SECURITY_NATIVE_DREP, &in_buf_desc, 0, &neg->ctx, &out_buf_desc, &ret_flags, &lifetime);
-					//LOG(INFO) << "$$$ InitializeSecurityContext @ " << TimeSince(now);
-					if (FAILED(ret)) {
-						LOG(LS_ERROR) << "InitializeSecurityContext returned: "
-							<< ErrorName(ret, SECURITY_ERRORS);
-						return HAR_ERROR;
-					}
-				} else if (neg->specified_credentials) {
-					// Try again with default credentials
-					specify_credentials = false;
-					delete context;
-					context = neg = 0;
-				} else {
-					return HAR_CREDENTIALS;
-				}
-			}
-
-			if (!neg) {
-				unsigned char userbuf[256], passbuf[256], domainbuf[16];
-				SEC_WINNT_AUTH_IDENTITY_A auth_id, * pauth_id = 0;
-				if (specify_credentials) {
-					memset(&auth_id, 0, sizeof(auth_id));
-					size_t len = password.GetLength()+1;
-					char * sensitive = new char[len];
-					password.CopyTo(sensitive, true);
-					std::string::size_type pos = username.find('\\');
-					if (pos == std::string::npos) {
-						auth_id.UserLength = static_cast<unsigned long>(
-							_min(sizeof(userbuf) - 1, username.size()));
-						memcpy(userbuf, username.c_str(), auth_id.UserLength);
-						userbuf[auth_id.UserLength] = 0;
-						auth_id.DomainLength = 0;
-						domainbuf[auth_id.DomainLength] = 0;
-						auth_id.PasswordLength = static_cast<unsigned long>(
-							_min(sizeof(passbuf) - 1, password.GetLength()));
-						memcpy(passbuf, sensitive, auth_id.PasswordLength);
-						passbuf[auth_id.PasswordLength] = 0;
-					} else {
-						auth_id.UserLength = static_cast<unsigned long>(
-							_min(sizeof(userbuf) - 1, username.size() - pos - 1));
-						memcpy(userbuf, username.c_str() + pos + 1, auth_id.UserLength);
-						userbuf[auth_id.UserLength] = 0;
-						auth_id.DomainLength = static_cast<unsigned long>(
-							_min(sizeof(domainbuf) - 1, pos));
-						memcpy(domainbuf, username.c_str(), auth_id.DomainLength);
-						domainbuf[auth_id.DomainLength] = 0;
-						auth_id.PasswordLength = static_cast<unsigned long>(
-							_min(sizeof(passbuf) - 1, password.GetLength()));
-						memcpy(passbuf, sensitive, auth_id.PasswordLength);
-						passbuf[auth_id.PasswordLength] = 0;
-					}
-					memset(sensitive, 0, len);
-					delete [] sensitive;
-					auth_id.User = userbuf;
-					auth_id.Domain = domainbuf;
-					auth_id.Password = passbuf;
-					auth_id.Flags = SEC_WINNT_AUTH_IDENTITY_ANSI;
-					pauth_id = &auth_id;
-					LOG(LS_VERBOSE) << "Negotiate protocol: Using specified credentials";
-				} else {
-					LOG(LS_VERBOSE) << "Negotiate protocol: Using default credentials";
-				}
-
-				CredHandle cred;
-				ret = AcquireCredentialsHandleA(0, want_negotiate ? NEGOSSP_NAME_A : NTLMSP_NAME_A, SECPKG_CRED_OUTBOUND, 0, pauth_id, 0, 0, &cred, &lifetime);
-				//LOG(INFO) << "$$$ AcquireCredentialsHandle @ " << TimeSince(now);
-				if (ret != SEC_E_OK) {
-					LOG(LS_ERROR) << "AcquireCredentialsHandle error: "
-						<< ErrorName(ret, SECURITY_ERRORS);
-					return HAR_IGNORE;
-				}
-
-				//CSecBufferBundle<5, CSecBufferBase::FreeSSPI> sb_out;
-
-				CtxtHandle ctx;
-				ret = InitializeSecurityContextA(&cred, 0, spn, flags, 0, SECURITY_NATIVE_DREP, 0, 0, &ctx, &out_buf_desc, &ret_flags, &lifetime);
-				//LOG(INFO) << "$$$ InitializeSecurityContext @ " << TimeSince(now);
-				if (FAILED(ret)) {
-					LOG(LS_ERROR) << "InitializeSecurityContext returned: "
-						<< ErrorName(ret, SECURITY_ERRORS);
-					FreeCredentialsHandle(&cred);
-					return HAR_IGNORE;
-				}
-
-				ASSERT(!context);
-				context = neg = new NegotiateAuthContext(auth_method, cred, ctx);
-				neg->specified_credentials = specify_credentials;
-				neg->steps = steps;
-			}
-
-			if ((ret == SEC_I_COMPLETE_NEEDED) || (ret == SEC_I_COMPLETE_AND_CONTINUE)) {
-				ret = CompleteAuthToken(&neg->ctx, &out_buf_desc);
-				//LOG(INFO) << "$$$ CompleteAuthToken @ " << TimeSince(now);
-				LOG(LS_VERBOSE) << "CompleteAuthToken returned: "
-					<< ErrorName(ret, SECURITY_ERRORS);
-				if (FAILED(ret)) {
-					return HAR_ERROR;
-				}
-			}
-
-			//LOG(INFO) << "$$$ NEGOTIATE took " << TimeSince(now) << "ms";
-
-			std::string decoded(out_buf, out_buf + out_sec.cbBuffer);
-			response = auth_method;
-			response.append(" ");
-			response.append(Base64::Encode(decoded));
-			return HAR_RESPONSE;
-		}
-#endif
-#endif // WIN32
-
 		return HAR_IGNORE;
 	}
 

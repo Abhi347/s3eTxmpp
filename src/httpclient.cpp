@@ -40,6 +40,7 @@
 #include "stringencode.h"
 #include "stringutils.h"
 #include "thread.h"
+#include "libManager.h"
 
 namespace txmpp {
 
@@ -109,7 +110,7 @@ HttpCacheState HttpGetCacheState(const HttpTransaction& t) {
   unsigned long i_temp;
 
   // Current time
-  unsigned long now = time(0);
+  unsigned long now = LIB_MAN->time();
 
   HttpAttributeList cache_control;
   if (t.response.hasHeader(HH_CACHE_CONTROL, &s_temp)) {

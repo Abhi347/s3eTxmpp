@@ -37,7 +37,7 @@
 #endif
 
 #include "common.h"
-
+#include "libManager.h"
 #define EFFICIENT_IMPLEMENTATION 1
 
 namespace txmpp {
@@ -48,7 +48,7 @@ const uint32 HALF = 0x80000000;
 #ifdef POSIX
 uint32 Time() {
   struct timeval tv;
-  gettimeofday(&tv, 0);
+  LIB_MAN->gettimeofday(&tv, NULL);
   return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 #endif
